@@ -1,15 +1,15 @@
-""" ttri2new.py
+""" 3Dvisual.py
     
     Usage:
-        ttri2new.py -h
-		ttri2new.py [(--draw-axes) (--draw-reference) (--draw-ref-labels) (--sizeX=<number>) (--sizeY=<number>) (--sizeZ=<number>) (--draw-X-values)]
+        3Dvisual.py -h
+		3Dvisual.py [(--draw-axes) (--draw-reference) (--draw-ref-labels) (--sizeX=<number>) (--sizeY=<number>) (--sizeZ=<number>) (--draw-X-values) (--draw-Y-values) (--draw-Z-values)]
 	
         
 
     Options:
 		-h,--help              : show this help message
-		--draw-axes            : draw plot axes
-		--draw-reference   		: draw reference of plot
+		--draw-axes            : example flag #1
+		-dr,--draw-reference   : draw reference of plot
 		-drf,--draw-ref-labels : draw reference labels
 		-dxv,--draw-X-values   : draw X values on reference plot
 		-dyv,--draw-Y-values   : draw Y values on reference plot		
@@ -17,7 +17,6 @@
 		-sxn,--sizeX=<number>  : Scale X by number 
 		-syn,--sizeY=<number>  : Scale Y by number
 		-szn,--sizeZ=<number>  : Scale Z by number
-		-n, <number> 		   : used for number
 	
 """
 import matplotlib.delaunay as triang
@@ -95,7 +94,7 @@ class Draw(object):
 			z = [int(i) for i in z]
 			#For performance sake, we reuse the xList, yList, zList and colourList holding data from the
 			#csv (insead of a new list lst_x e.t.c)
-			#-----SWAP Z and Y for the plane of the plot----#
+			#-----SWAP Z and Y in the plane of the plot----#
 			self.xList.append(x)
 			self.yList.append(y)
 			self.zList.append(z)
@@ -107,14 +106,6 @@ class Draw(object):
 		self.colourList[:100] = [] #Remove all values corresponding to colour that was appended from csv
 
 	def draw_triangulation(self):
-		#parser = argparse.ArgumentParser()
-		#parser.add_argument("--draw", help="display sum of a given number with 2",action="store_true")
-		#docopt_args = parser.parse_docopt_args()
-		#if docopt_args.draw:
-			#self.xList = np.multiply(self.xList,3)
-		#else:
-			#self.xList = self.xList
-			#self.lst_y = np.multiply(self.lst_z,4)
 		col = 0 #Start at column 0
 		i = 0
 		j = 1
@@ -130,7 +121,7 @@ class Draw(object):
 			#Access lists column after column
 			#Swap y and Z for the plot plane
 			xcol = self.xList[col] #Get all values corresponding to x from updated xList
-			zcol = self.yList[col] #Get all values corresponding to y from update yList
+			zcol = self.yList[col] #Get all values corresponding to y from updated yList
 			ycol = self.zList[col] #Get all values corresponding to z from zList
 			#Get out each individual items in the columns
 			x1 = xcol[i] 
@@ -174,12 +165,13 @@ class Draw(object):
 def main(docopt_args):
 	#Create an object of the Draw class
 	obj = Draw()
-	#swap the minimum and maximum values as well 
+	#swap the minimum and maximum values of z and y from the list
 	x_min = obj.min_xyz_values[0]
-	z_min = obj.min_xyz_values[1]
-	y_min = obj.min_xyz_values[2]
+	z_min = obj.min_xyz_values[1] #y_min value is now swapped for z_min value
+	y_min = obj.min_xyz_values[2] #z_min value is now swapped for y_min value
 	x_max = obj.max_xyz_values[0]
-	z_max = obj.max_xyz_values[1]
+	#Same swapping for both z_max and y_max
+	z_max = obj.max_xyz_values[1] 
 	y_max = obj.max_xyz_values[2]
 	R = obj.R
 	G = obj.G
@@ -190,75 +182,74 @@ def main(docopt_args):
 	range_z= z_max - z_min #Range of y values
 	#Calculate the triangulation data
 	obj.calc_triangulation()
+	
 	#Check for scaling parameters and apply accordingly
 	if docopt_args["--sizeX"]: #If the is a value, scale X for this value
 		number = docopt_args.get("--sizeX")
 		scale_x = (int(number)/range_x)
-		obj.xList = np.multiply(obj.xList,int(scale_x))
-		print "Yes number X",number
+		obj.xList = np.multiply(obj.xList,int(scale_x)) #Scale the values in xList by scale_x value
+		x_min = np.amin(obj.xList) #Min x value after scaling X
+		x_max = np.amax(obj.xList) #Max x values after scaling X
 	if docopt_args["--sizeY"]: #if there is a value, scale Y for this value
 		number = docopt_args.get("--sizeY")
 		scale_y = (int(number)/range_y)
-		obj.yList = np.multiply(obj.yList,int(scale_y))
-		print "Y"
+		obj.zList = np.multiply(obj.zList,int(scale_y)) #Scale elements contained in zList, these will will use as y values
+		y_min = np.amin(obj.zList) #Max y values after scaling
+		y_max = np.amax(obj.zList)  #Max y values after scaling
+		print "damn y min", y_min
 	if docopt_args["--sizeZ"]: #if there is a value, scale Z for this value
 		number = docopt_args.get("--sizeZ")
 		scale_z = (int(number)/range_z)
-		obj.zList = np.multiply(obj.zList,int(scale_z))
-		print "Z"
-	#After all scaling is done, print triangulation output
+		obj.yList = np.multiply(obj.yList,int(scale_z))
+		z_min = np.amin(obj.yList) #Min z value after scaling
+		z_max = np.amax(obj.yList)  #Max z values after scaling
+	#After all scaling is done, print triangulation plot
 	obj.draw_triangulation()
 	
+	#Draw triangulation axes
 	if docopt_args["--draw-axes"]:
 	#Draw X, Y and Z axis
 		print "line", x_min,y_min,z_min, x_max,y_min,z_min,"4",R,G,"0",gamma #Draw x-axis
 		print "line", x_min,y_min,z_min, x_min,y_max,z_min,"4",R,G,"0",gamma #Draw y axis.Remember that we interchanged z and y
 		print "line", x_min,y_min,z_min, x_min,y_min,z_max,"4",R,G,"0",gamma #Draw z-axis
+	
+	#Draw reference lables for plot
 	if docopt_args["--draw-ref-labels"]:
 		#Draw X, Y and Z Axes label
-		print "text", x_max,0,0,"ffffff", "X-axis" 
-		print "text", 0,y_max,0,"ffffff", "Z-axis" 
-		print "text", 0,0,z_max,"ffffff", "Y-axis" 
+		print "text", x_max+1,0,0,"ffffff", "X-axis" 
+		print "text", 0,y_max+1,0,"ffffff", "Z-axis" 
+		print "text", 0,0,z_max+1,"ffffff", "Y-axis" 
 		
 	if docopt_args["--draw-X-values"]:
 		#Draw x values on plot
 		for i in range(0,x_max+1,1):
-			print "text", i,0,0,"ffffff", i #Draw vlaues of x
+			print "text", i,0,0,"ffffff", i #Draw values of x
+			
+	if docopt_args["--draw-Y-values"]:
+		#Draw x values on plot
+		for i in range(0,y_max+1,1):
+			print "text", 0,i,0,"ffffff", i #Draw values of x
+			
+	if docopt_args["--draw-Z-values"]:
+		#Draw x values on plot
+		for i in range(0,z_max+1,1):
+			print "text", 0,0,i,"ffffff", i #Draw values of x
 	
 	if docopt_args["--draw-reference"]:	
 			#Draw y and x lines for Grid
-		for i in range(0,y_max+1,1):
+		for i in range(y_min,y_max+1,1):
 			print "line", x_min,i,z_min,x_max,i,z_min,"1",R,G,"0",gamma #Draw x line on the y axis
 			print "text", 0,i,0,"ffffff", i #Draw vlaues of y on y axis
 		#Draw z and x lines for Grid
-		for i in range(0,z_max+1,1):
-			print "line", x_min,y_min,i,x_max,y_min,i,"1",R,G,"0",gamma #Draw x line on the y axis
+		for i in range(z_min,z_max+1,1):
+			print "line", x_min,y_min,i,x_max,y_min,i,"1",R,G,"0",gamma #Draw x line on the z axis
 			print "text", 0,0,i,"ffffff", i #Draw vlaues of z on x axis
-		for i in range(0,x_max+1,1):
-			print "line", i,y_min,z_min,i,y_min,z_max,"1",R,G,"0",gamma  #Draw z line across/against x axis
-			print "line", i,y_min,z_min,i,y_max,z_min,"1",R,G,"0",gamma #Draw vertical y line
+		for i in range(x_min,x_max+1,1):
+			print "line", i,y_min,z_min,i,y_min,z_max,"1",R,G,"0",gamma  #Draw z line on x axis
+			print "line", i,y_min,z_min,i,y_max,z_min,"1",R,G,"0",gamma #Draw vertical y line on X axis
 			print "text", i,0,0,"ffffff", i #Draw vlaues of x on x axis
 	
 if __name__ == "__main__":
     args = docopt(__doc__)
     main(args)
-	
-
-
-
-
-
-
-
-			
-			
-			
-
-
-
-
-
-
-
-
 	
