@@ -1,4 +1,6 @@
-main program
+# 3Dvisual
+
+Main program
 
 How to run:
 
