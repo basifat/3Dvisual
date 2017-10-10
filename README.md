@@ -4,8 +4,9 @@ This is the 3D plotter program for my Masters thesis. It implements the Delaunay
 
 Sample rendering:
 
-![3D rendering](/3Dvisual/heat1.PNG?raw=true "3D reconstruction of multi-dimensional HSR data points -top view")
-![3D rendering](/3Dvisual/heat2.PNG?raw=true "3D reconstruction of multi-dimensional HSR data points - side view")
+![3D rendering](3Dvisual/heat1.PNG "3D reconstruction of multi-dimensional HSR data points -top view")
+
+![3D rendering](3Dvisual/heat2.PNG "3D reconstruction of multi-dimensional HSR data points - side view")
 
 Dependencies :
 
